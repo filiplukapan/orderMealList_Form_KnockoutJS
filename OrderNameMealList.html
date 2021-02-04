@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src = "https://ajax.aspnetcdn.com/ajax/knockout/knockout-3.1.0.js" 
+    type = "text/javascript"></script>
+    <title>Knockout Reservation</title>
+
+    <style>
+
+        .styled-table {
+            border-collapse: collapse;
+            
+            font-size: 0.9em;
+            font-family: sans-serif;
+            min-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+
+            border: black;
+            border-style: solid;
+        }
+
+        .styled-table thead tr {
+            background-color: #ce6961;
+            color: #ffffff;
+            text-align: left;
+            border-bottom: black;
+            border-style: solid;
+        }
+
+        .styled-table th,
+        .styled-table td {
+            padding: 12px 20px;
+        }
+
+        .styled-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .styled-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        .styled-table tbody tr:last-of-type {
+            border-bottom: 2px solid black;
+        }
+
+        .styled-table tbody tr.active-row {
+            font-weight: bold;
+            color: #009879;
+        }
+
+    </style>
+</head>
+
+<body>
+<div>
+<table class="styled-table">
+    <thead class="titlethead">
+        <tr><th colspan="4"><h2><center>Your seat reservations</center></h2></th></tr>
+    </thead>
+    <thead><tr>
+        <th>Passenger name</th>
+        <th>Meal</th>
+        <th>Surcharge</th>
+        <th></th>
+    </tr></thead>
+    <tbody data-bind="foreach: seats">
+        <tr>
+            <td data-bind="text: name"></td>
+            <td><select data-bind="options: $root.availableMeals, value: meal, optionsText: 'mealName'"></select></td>
+            <td data-bind="text: formattedPrice"></td>
+            <td><a href="#" data-bind="click: $root.removeSeat">Remove</a> </td>
+        </tr>
+    </tbody>
+    <tbody data-bind="visible: totalSurcharge()">
+            <tr>
+            <td><span data-bind="text: seats().length"></span> seats reserved</td>
+            <td></td>
+            <td>
+                <b><span data-bind="text: totalSurcharge().toFixed(2)"></span>€</b>
+            </td>
+            <td>Total</td>
+        </tr>    
+    </tbody>
+    <tbody>
+        <td>Enter another reservation:</td>
+        <td><input id="name" placeholder="Passenger Name" data-bind="passengerName"></input></td>
+        <td><button data-bind="click: addSeat">Reserve another Seat</button></td>
+        <td><button data-bind="click: orderReservation">Order reservations</button></td>
+    </tbody>
+</table>
+</div>
+
+<br>
+<br>
+
+
+<script>
+// Class to represent a row in the seat reservations grid
+function SeatReservation(name, initialMeal) {
+    var self = this;
+    self.name = name;
+    self.meal = ko.observable(initialMeal);
+
+    self.formattedPrice = ko.computed(function() {
+        var price = self.meal().price;
+        return price ? price.toFixed(2) + "€" : "None";
+    });
+}
+
+// Overall viewmodel for this screen, along with initial state
+function ReservationsViewModel() {
+    var self = this;
+
+    // Non-editable catalog data - would come from the server
+    self.availableMeals = [
+        { mealName: "Please select a meal", price: 0 },
+        { mealName: "Pizza", price: 8.95 },
+        { mealName: "Kebap", price: 3.50 },
+        { mealName: "Fruit dish", price: 6.39 },
+        { mealName: "Lasagne", price: 9.99 },
+        { mealName: "Tuna filets", price: 14.95 },
+        { mealName: "Lobster", price: 34.95 },
+        { mealName: "Ultimate (whole zebra)", price: 290 },
+        { mealName: "No meal", price: 0 }
+
+    ];    
+
+    // Editable data
+    self.seats = ko.observableArray([
+        new SeatReservation("Steve", self.availableMeals[0]),
+        new SeatReservation("Bert", self.availableMeals[0])
+    ]);
+    
+    //logic to add new reservations to the table
+    self.addSeat = function() {
+        passengerNameInput = document.getElementById('name').value;
+        
+        self.seats.push(new SeatReservation(passengerNameInput, self.availableMeals[0]));
+    }
+
+    self.orderReservation = function() {
+        var answer = window.confirm("Confirmation\n\nAre you sure that you want to order " + self.seats().length.toString() + " seats?\n\n" + self.totalSurcharge().toString() + "€ total price.");
+        
+        if (answer) {
+            alert("Thank you for your order.")
+        }
+    }
+
+    //logic for removing the seats with the remove html button
+    self.removeSeat = function(seat) {
+        { self.seats.remove(seat) }
+    }
+
+    //logic for calculating the total meal price
+    self.totalSurcharge = ko.computed(function () {
+    var total = 0;
+    for (var i = 0; i < self.seats().length; i++)
+        total += self.seats()[i].meal().price;
+     return total;
+    }); 
+    
+
+}
+
+ko.applyBindings(new ReservationsViewModel());
+</script>
+
+</body>
+</html>
